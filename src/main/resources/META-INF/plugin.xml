@@ -54,6 +54,7 @@
                 text="SerialVersionUID"
                 description="Generates a serialVersionUID field">
             <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="GenerateEquals" />
+            <keyboard-shortcut first-keystroke="control alt G" keymap="$default"/>
         </action>
     </actions>
 </idea-plugin>
