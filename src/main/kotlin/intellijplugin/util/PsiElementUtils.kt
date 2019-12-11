@@ -1,10 +1,9 @@
-package intellijplugin.psi
+package intellijplugin.util
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil.findChildOfType
-import com.youngfeng.ideaplugin.hash.computeHashCode
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassBody
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -28,7 +27,9 @@ private fun psiFactory(project: Project) = KtPsiFactory(project, false)
 private fun KtPsiFactory.getOrCreateKtClassBody(ktClass: KtClass) = ktClass.findChild() ?: createEmptyClassBody()
 
 private fun KtPsiFactory.generateSerialVersionUidField(serialVersionUid: Long) =
-    createProperty(MODIFIERS, SERIAL_VERSION_UID, null, false, "${serialVersionUid}L")
+    createProperty(
+        MODIFIERS,
+        SERIAL_VERSION_UID, null, false, "${serialVersionUid}L")
 
 private fun KtClassBody.findCompanionObjectElement() = allCompanionObjects.firstOrNull()
 

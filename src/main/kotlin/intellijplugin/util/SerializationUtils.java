@@ -1,4 +1,4 @@
-package intellijplugin.java.siyeh_ig.psiutils;
+package intellijplugin.util;
 
 import com.intellij.psi.*;
 import com.intellij.psi.util.InheritanceUtil;

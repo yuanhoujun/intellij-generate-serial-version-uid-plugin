@@ -1,4 +1,4 @@
-package intellijplugin.kotlin;
+package intellijplugin.action;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
@@ -6,29 +6,25 @@ import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorAction;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.youngfeng.ideaplugin.java.GenerateSerialVersionUIDHandler;
-import com.youngfeng.ideaplugin.java.GenerateSerialVersionUIDHandlerForKotlin;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.*;
 import org.jetbrains.kotlin.idea.internal.Location;
 import org.jetbrains.kotlin.psi.KtClass;
 import org.jetbrains.kotlin.psi.KtFile;
 
-public final class GenerateSerialVersionUIDActionForKotlin extends EditorAction {
+public final class GenerateSerialVersionUIDAction extends EditorAction {
 
-    public GenerateSerialVersionUIDActionForKotlin() {
-        super(GenerateSerialVersionUIDHandlerForKotlin.INSTANCE);
+    public GenerateSerialVersionUIDAction() {
+        super(GenerateSerialVersionUIDHandler.INSTANCE);
     }
 
 	@Override
 	public void update(Editor editor, Presentation presentation, DataContext dataContext) {
 		final Project project = PlatformDataKeys.PROJECT.getData(dataContext);
-
 		boolean       visible = false;
 		boolean       enabled = false;
 
-		if (null != project) {
+		if (project != null) {
 			PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
 
 			if (psiFile instanceof KtFile) {
@@ -38,9 +34,17 @@ public final class GenerateSerialVersionUIDActionForKotlin extends EditorAction 
 				if (null != psiElement) {
 					KtClass ktClass = GenerateSerialVersionUIDHandler.getKtClassWith(psiElement);
 
-					visible = GenerateSerialVersionUIDHandlerForKotlin.needsUIDField(ktClass);
-					enabled = (visible && !GenerateSerialVersionUIDHandlerForKotlin.hasUIDField(ktClass));
+					visible = GenerateSerialVersionUIDHandler.needsUIDField(ktClass);
+					enabled = (visible && !GenerateSerialVersionUIDHandler.hasUIDField(ktClass));
 				}
+			} else if (psiFile instanceof PsiJavaFile) {
+				final VirtualFile virtualFile = PlatformDataKeys.VIRTUAL_FILE.getData(dataContext);
+
+				final PsiManager  psiManager  = PsiManager.getInstance(project);
+				final PsiClass    psiClass    = GenerateSerialVersionUIDHandler.getPsiClass(virtualFile, psiManager, editor);
+
+				visible = GenerateSerialVersionUIDHandler.needsUIDField(psiClass);
+				enabled = (visible && !GenerateSerialVersionUIDHandler.hasUIDField(psiClass));
 			}
 		}
 

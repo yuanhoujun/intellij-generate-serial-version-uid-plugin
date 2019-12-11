@@ -1,4 +1,4 @@
-package intellijplugin.hash
+package intellijplugin.util
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.cache.ModifierFlags.ABSTRACT_MASK
@@ -7,7 +7,7 @@ import com.intellij.psi.impl.cache.ModifierFlags.OPEN_MASK
 import com.intellij.psi.impl.cache.ModifierFlags.PRIVATE_MASK
 import com.intellij.psi.impl.cache.ModifierFlags.PROTECTED_MASK
 import com.intellij.psi.impl.cache.ModifierFlags.PUBLIC_MASK
-import com.youngfeng.ideaplugin.java.GenerateSerialVersionUIDHandler
+import intellijplugin.action.GenerateSerialVersionUIDHandler
 import org.jetbrains.kotlin.caches.resolve.KotlinCacheService.Companion.getInstance
 import org.jetbrains.kotlin.idea.core.isInheritable
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
@@ -70,10 +70,10 @@ private fun DataOutputStream.addClassHash(ktClass: KtClass) {
 
         val interfaces = superTypeListEntries
         interfaces.sortedBy { it.text }.forEach {
-            writeUTF(_root_ide_package_.intellijplugin.hash.generateSignature(it.text))
+            writeUTF(generateSignature(it.text))
         }
 
-        writeUTF(_root_ide_package_.intellijplugin.hash.generateSignature(text))
+        writeUTF(generateSignature(text))
     }
 }
 
@@ -115,8 +115,8 @@ private fun  <T : KtConstructor<T>> DataOutputStream.calculateConstructorsHash(c
 private fun <T : KtConstructor<T>> DataOutputStream.calculateConstructorHash(constructor: KtConstructor<T>) {
     with(constructor) {
         safeWriteUTF(name)
-        writeInt(_root_ide_package_.intellijplugin.hash.computeModifierHash(modifierList))
-        safeWriteUTF(_root_ide_package_.intellijplugin.hash.generateSignature(text))
+        writeInt(computeModifierHash(modifierList))
+        safeWriteUTF(generateSignature(text))
     }
 }
 
@@ -126,7 +126,7 @@ private fun DataOutputStream.addClassBodyHash(ktClassBody: KtClassBody) {
 
         val functions = children.filterIsInstance<KtNamedFunction>().filter { !it.isPrivate() }
         if (functions.isEmpty()) {
-            var hash = _root_ide_package_.intellijplugin.hash.DEFAULT_HASH_VALUE
+            var hash = DEFAULT_HASH_VALUE
             hash = hash and 0xfffffbff.toInt()
             hash
         } else {
@@ -138,8 +138,8 @@ private fun DataOutputStream.addClassBodyHash(ktClassBody: KtClassBody) {
 private fun DataOutputStream.computeInitializersHash(ktClassBody: KtClassBody) {
     ktClassBody.anonymousInitializers.forEach {
         safeWriteUTF(it.name)
-        writeInt(_root_ide_package_.intellijplugin.hash.computeModifierHash(it.modifierList))
-        writeUTF(_root_ide_package_.intellijplugin.hash.generateSignature(ktClassBody.text))
+        writeInt(computeModifierHash(it.modifierList))
+        writeUTF(generateSignature(ktClassBody.text))
     }
 }
 
@@ -149,7 +149,7 @@ private fun DataOutputStream.computeDeclarationsHash(declarations: List<KtDeclar
 
 private fun DataOutputStream.computePropertyHash(it: KtProperty) {
     safeWriteUTF(it.name)
-    writeInt(_root_ide_package_.intellijplugin.hash.computeModifierHash(it.modifierList))
+    writeInt(computeModifierHash(it.modifierList))
 }
 
 fun createTypeSignature(el: KtClass): String? {
@@ -170,10 +170,10 @@ fun generateSignature(el: PsiElement): String {
 
     if (null == ktClass) return ""
 
-    return _root_ide_package_.intellijplugin.hash.createTypeSignature(ktClass) ?: ""
+    return createTypeSignature(ktClass) ?: ""
 }
 
-fun generateSignature(text: String) = "${_root_ide_package_.intellijplugin.hash.SIGNATURE_PREFIX}$text"
+fun generateSignature(text: String) = "${SIGNATURE_PREFIX}$text"
 
 private fun computeModifierHash(it: KtModifierList?): Int {
     var modifiers = 0
@@ -233,8 +233,8 @@ private fun computeModifierHash(it: KtModifierList?): Int {
 
 private fun DataOutputStream.computeDeclarationHash(it: KtDeclaration) {
     safeWriteUTF(it.name)
-    writeInt(_root_ide_package_.intellijplugin.hash.computeModifierHash(it.modifierList))
-    writeUTF(_root_ide_package_.intellijplugin.hash.generateSignature(it.text))
+    writeInt(computeModifierHash(it.modifierList))
+    writeUTF(generateSignature(it.text))
 }
 
 private fun DataOutputStream.safeWriteUTF(text: String?) = text?.let { writeUTF(it) }

@@ -1,10 +1,9 @@
-package intellijplugin.java.siyeh_ig.fixes;
+package intellijplugin.util;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiUtil;
-import intellijplugin.java.siyeh_ig.psiutils.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

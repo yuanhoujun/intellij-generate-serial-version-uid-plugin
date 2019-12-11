@@ -33,7 +33,7 @@
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="">org.jetbrains.kotlin</depends>
 
     <change-notes>
         <![CDATA[
@@ -50,14 +50,7 @@
     </change-notes>
     <actions>
         <action id="GenerateSerialVersionUID"
-                class="intellijplugin.java.GenerateSerialVersionUIDAction"
-                text="SerialVersionUID"
-                description="Generates a serialVersionUID field">
-            <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="GenerateEquals" />
-        </action>
-
-        <action id="GenerateSerialVersionUIDForKotlin"
-                class="intellijplugin.kotlin.GenerateSerialVersionUIDActionForKotlin"
+                class="intellijplugin.action.GenerateSerialVersionUIDAction"
                 text="SerialVersionUID"
                 description="Generates a serialVersionUID field">
             <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="GenerateEquals" />

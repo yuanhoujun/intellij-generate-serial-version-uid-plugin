@@ -1,4 +1,4 @@
-package intellijplugin.java.siyeh_ig.psiutils;
+package intellijplugin.util;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;

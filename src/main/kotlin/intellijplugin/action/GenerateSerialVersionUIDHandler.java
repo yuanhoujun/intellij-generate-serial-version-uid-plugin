@@ -1,4 +1,4 @@
-package intellijplugin.java;
+package intellijplugin.action;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.DataKeys;
@@ -11,15 +11,19 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.IncorrectOperationException;
-import intellijplugin.java.siyeh_ig.fixes.SerialVersionUIDBuilder;
-import intellijplugin.java.siyeh_ig.psiutils.ClassUtils;
-import intellijplugin.java.siyeh_ig.psiutils.SerializationUtils;
+import intellijplugin.util.ClassUtils;
+import intellijplugin.util.HashUtilsKt;
+import intellijplugin.util.SerialVersionUIDBuilder;
+import intellijplugin.util.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.asJava.elements.KtLightElement;
-import org.jetbrains.kotlin.psi.KtClass;
+import org.jetbrains.kotlin.idea.internal.Location;
+import org.jetbrains.kotlin.psi.*;
 
 import javax.swing.*;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
 
@@ -58,19 +62,41 @@ public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
             return;
         }
 
-		final PsiManager manager  = PsiManager.getInstance(project);
-		final PsiClass   psiClass = getPsiClass(virtualFile, manager, editor);
+		PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+		if (psiFile instanceof PsiJavaFile) {
+			final PsiManager manager  = PsiManager.getInstance(project);
+			final PsiClass   psiClass = getPsiClass(virtualFile, manager, editor);
 
-		if (psiClass == null) {
-			LOGGER.debug("psiClass == null");
-			displayMessage("Not a Java class file.");
-			return;
-		}
+			if (psiClass == null) {
+				LOGGER.debug("psiClass == null");
+				displayMessage("Not a Java class file.");
+				return;
+			}
 
-        final long serialVersionUIDValue = SerialVersionUIDBuilder.computeDefaultSUID(psiClass);
+			final long serialVersionUIDValue = SerialVersionUIDBuilder.computeDefaultSUID(psiClass);
 
-		if (needsUIDField(psiClass) && !hasUIDField(psiClass, serialVersionUIDValue)) {
-			insertSerialVersionUID(project, virtualFile.getExtension(), psiClass, serialVersionUIDValue);
+			if (needsUIDField(psiClass) && !hasUIDField(psiClass, serialVersionUIDValue)) {
+				insertSerialVersionUID(project, virtualFile.getExtension(), psiClass, serialVersionUIDValue);
+			}
+		} else if (psiFile instanceof KtFile) {
+			Location location = Location.fromEditor(editor, project);
+			PsiElement psiElement = psiFile.findElementAt(location.getStartOffset());
+
+			KtClass ktClass = null;
+			if (null != psiElement) {
+				ktClass = GenerateSerialVersionUIDHandler.getKtClassWith(psiElement);
+			}
+
+			if (ktClass == null) {
+				LOGGER.debug("ktClass == null");
+				displayMessage("Not a Kotlin class file.");
+				return;
+			}
+
+			if (needsUIDField(ktClass) && !hasUIDField(ktClass)) {
+				Long serialVersionUID = HashUtilsKt.computeHashCode(ktClass, ktClass.getBody());
+				insertSerialVersionUID(editor, ktClass, serialVersionUID);
+			}
 		}
 	}
 
@@ -137,6 +163,70 @@ public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
 		}
 	}
 
+	private static void insertSerialVersionUID(Editor editor, KtClass ktClass, Long serialVersionUID) {
+		final CodeStyleManager  codeStyleManager  = CodeStyleManager.getInstance(ktClass.getProject());
+		KtPsiFactory elementFactory = new KtPsiFactory(ktClass.getProject());
+
+		KtClassBody body = ktClass.getBody();
+
+		if (null != body) {
+			List<KtDeclaration> declarations = body.getDeclarations();
+
+			AtomicBoolean hasSerialVersionUID = new AtomicBoolean(false);
+			AtomicBoolean hasCompanionObject = new AtomicBoolean(false);
+
+			if (declarations.size() > 0) {
+				declarations.forEach(declaration -> {
+					if (declaration instanceof KtObjectDeclaration) {
+						KtObjectDeclaration objectDeclaration = (KtObjectDeclaration) declaration;
+
+						if (objectDeclaration.isCompanion()) {
+							KtClassBody companionBody = objectDeclaration.getBody();
+
+							if (null != companionBody) {
+								List<KtProperty> properties = companionBody.getProperties();
+
+								properties.forEach(prop -> {
+									if ("serialVersionUID".equals(prop.getName())) {
+										hasSerialVersionUID.set(true);
+									}
+								});
+
+								if (!hasSerialVersionUID.get()) {
+									String block1 = "\n\t\tconst val serialVersionUID = " + serialVersionUID + "L\n";
+
+									KtProperty property = elementFactory.createProperty("const", "serialVersionUID", "Long", false, serialVersionUID + "L");
+
+									objectDeclaration.getBody().addAfter(property, objectDeclaration.getBody().getFirstChild());
+									codeStyleManager.reformat(objectDeclaration);
+								}
+							}
+							hasCompanionObject.set(true);
+						}
+					}
+				});
+			}
+
+			if (!hasCompanionObject.get()) {
+				StringBuilder block = new StringBuilder("\tcompanion object {\n");
+				block.append("\t\tconst val serialVersionUID = ")
+						.append(serialVersionUID)
+						.append("L\n")
+						.append("\t}\n");
+
+				KtObjectDeclaration companionObject = elementFactory.createCompanionObject();
+
+
+				String block1 = "\n\t\tconst val serialVersionUID = " + serialVersionUID + "L\n";
+
+				companionObject.getBody().addAfter(elementFactory.createBlockCodeFragment(block1, companionObject), companionObject.getBody().getFirstChild());
+
+				ktClass.getBody().addAfter(companionObject, ktClass.getBody().getFirstChild());
+				codeStyleManager.reformat(companionObject);
+			}
+		}
+	}
+
 	private static void displayMessage(@NotNull final String message) {
 		SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -167,6 +257,27 @@ public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
 			if (!SerializationUtils.isDirectlySerializable(aClass)) {
 				return false;
 			}
+		} else if (!SerializationUtils.isSerializable(aClass)) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean needsUIDField(@Nullable KtClass aClass) {
+		if (aClass == null) {
+			return false;
+		}
+		if (aClass.isInterface() || aClass.isAnnotation() || aClass.isEnum()) {
+			return false;
+		}
+		//if (aClass instanceof PsiTypeParameter || aClass instanceof PsiAnonymousClass) {
+		//	return false;
+		//}
+
+		if (m_ignoreSerializableDueToInheritance) {
+			//if (!SerializationUtils.isDirectlySerializable(aClass)) {
+			//	return false;
+			//}
 		} else if (!SerializationUtils.isSerializable(aClass)) {
 			return false;
 		}
@@ -209,5 +320,29 @@ public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
 			return (literalValue instanceof Long && (((Long) literalValue) * sign) == serialVersionUIDValue);
 		}
 		return false;
+	}
+
+	public static boolean hasUIDField(@Nullable KtClass psiClass) {
+		return hasUIDField(psiClass, -1L);
+	}
+
+	public static boolean hasUIDField(@Nullable KtClass psiClass, long serialVersionUIDValue) {
+		if (null == psiClass) return false;
+
+		List<KtObjectDeclaration> companionObjects = psiClass.getCompanionObjects();
+		AtomicBoolean result = new AtomicBoolean(false);
+		companionObjects.forEach(value -> {
+			KtClassBody body = value.getBody();
+			if (null != body) {
+				List<KtProperty> properties = body.getProperties();
+				properties.forEach(prop -> {
+					if ("serialVersionUID".equals(prop.getName())) {
+						result.set(true);
+					}
+				});
+			}
+		});
+
+		return result.get();
 	}
 }

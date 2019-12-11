@@ -1,8 +1,6 @@
-package intellijplugin.java.siyeh_ig.fixes;
+package intellijplugin.util;
 
 import com.intellij.psi.*;
-import intellijplugin.java.siyeh_ig.psiutils.ClassUtils;
-import intellijplugin.java.siyeh_ig.psiutils.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
