@@ -1,4 +1,4 @@
-package com.youngfeng.ideaplugin.java;
+package intellijplugin.java;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;

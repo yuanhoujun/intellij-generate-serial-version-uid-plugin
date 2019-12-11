@@ -1,4 +1,4 @@
-package com.youngfeng.ideaplugin.java;
+package intellijplugin.java;
 
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.DataKeys;
@@ -11,9 +11,9 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.IncorrectOperationException;
-import com.youngfeng.ideaplugin.java.siyeh_ig.fixes.SerialVersionUIDBuilder;
-import com.youngfeng.ideaplugin.java.siyeh_ig.psiutils.ClassUtils;
-import com.youngfeng.ideaplugin.java.siyeh_ig.psiutils.SerializationUtils;
+import intellijplugin.java.siyeh_ig.fixes.SerialVersionUIDBuilder;
+import intellijplugin.java.siyeh_ig.psiutils.ClassUtils;
+import intellijplugin.java.siyeh_ig.psiutils.SerializationUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.asJava.elements.KtLightElement;

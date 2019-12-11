@@ -1,4 +1,4 @@
-package com.youngfeng.ideaplugin.psi
+package intellijplugin.psi
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement

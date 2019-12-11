@@ -50,14 +50,14 @@
     </change-notes>
     <actions>
         <action id="GenerateSerialVersionUID"
-                class="com.youngfeng.ideaplugin.java.GenerateSerialVersionUIDAction"
+                class="intellijplugin.java.GenerateSerialVersionUIDAction"
                 text="SerialVersionUID"
                 description="Generates a serialVersionUID field">
             <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="GenerateEquals" />
         </action>
 
         <action id="GenerateSerialVersionUIDForKotlin"
-                class="com.youngfeng.ideaplugin.kotlin.GenerateSerialVersionUIDActionForKotlin"
+                class="intellijplugin.kotlin.GenerateSerialVersionUIDActionForKotlin"
                 text="SerialVersionUID"
                 description="Generates a serialVersionUID field">
             <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="GenerateEquals" />

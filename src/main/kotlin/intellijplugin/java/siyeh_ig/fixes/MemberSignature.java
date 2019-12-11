@@ -1,8 +1,8 @@
-package com.youngfeng.ideaplugin.java.siyeh_ig.fixes;
+package intellijplugin.java.siyeh_ig.fixes;
 
 import com.intellij.psi.*;
-import com.youngfeng.ideaplugin.java.siyeh_ig.psiutils.ClassUtils;
-import com.youngfeng.ideaplugin.java.siyeh_ig.psiutils.TypeUtils;
+import intellijplugin.java.siyeh_ig.psiutils.ClassUtils;
+import intellijplugin.java.siyeh_ig.psiutils.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
