@@ -11,10 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.IncorrectOperationException;
-import intellijplugin.util.ClassUtils;
-import intellijplugin.util.HashUtilsKt;
-import intellijplugin.util.SerialVersionUIDBuilder;
-import intellijplugin.util.SerializationUtils;
+import intellijplugin.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.asJava.elements.KtLightElement;
@@ -94,7 +91,7 @@ public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
 			}
 
 			if (needsUIDField(ktClass) && !hasUIDField(ktClass)) {
-				Long serialVersionUID = HashUtilsKt.computeHashCode(ktClass, ktClass.getBody());
+				Long serialVersionUID = KtSerialVersionUIDBuilderKt.computeDefaultSUID(ktClass);
 				insertSerialVersionUID(editor, ktClass, serialVersionUID);
 			}
 		}
@@ -323,7 +320,7 @@ public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
 	}
 
 	public static boolean hasUIDField(@Nullable KtClass psiClass) {
-		return hasUIDField(psiClass, -1L);
+		return hasUIDField(psiClass, KtSerialVersionUIDBuilderKt.computeDefaultSUID(psiClass));
 	}
 
 	public static boolean hasUIDField(@Nullable KtClass psiClass, long serialVersionUIDValue) {
@@ -337,7 +334,15 @@ public class GenerateSerialVersionUIDHandler extends EditorWriteActionHandler {
 				List<KtProperty> properties = body.getProperties();
 				properties.forEach(prop -> {
 					if ("serialVersionUID".equals(prop.getName())) {
-						result.set(true);
+						KtExpression initializer = prop.getInitializer();
+						if (null != initializer) {
+							String initialValue = initializer.getText();
+							if (null != initialValue && initialValue.length() > 0) {
+								if (Long.parseLong(initialValue) == serialVersionUIDValue) {
+									result.set(true);
+								}
+							}
+						}
 					}
 				});
 			}

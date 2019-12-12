@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.actionSystem.EditorAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import intellijplugin.util.KtSerialVersionUIDBuilderKt;
 import org.jetbrains.kotlin.idea.internal.Location;
 import org.jetbrains.kotlin.psi.KtClass;
 import org.jetbrains.kotlin.psi.KtFile;
@@ -36,6 +37,8 @@ public final class GenerateSerialVersionUIDAction extends EditorAction {
 
 					visible = GenerateSerialVersionUIDHandler.needsUIDField(ktClass);
 					enabled = (visible && !GenerateSerialVersionUIDHandler.hasUIDField(ktClass));
+
+					KtSerialVersionUIDBuilderKt.computeDefaultSUID(ktClass);
 				}
 			} else if (psiFile instanceof PsiJavaFile) {
 				final VirtualFile virtualFile = PlatformDataKeys.VIRTUAL_FILE.getData(dataContext);
