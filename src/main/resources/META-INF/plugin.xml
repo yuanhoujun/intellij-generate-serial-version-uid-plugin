@@ -43,7 +43,7 @@
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="plugin.xml">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file=" ">org.jetbrains.kotlin</depends>
 
     <actions>
         <action id="GenerateSerialVersionUID.SerialVersionUID"
