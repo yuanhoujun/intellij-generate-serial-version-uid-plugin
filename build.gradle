@@ -3,8 +3,10 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.60'
 }
 
-group 'org.example'
-version '1.0-SNAPSHOT'
+def pluginVersion = '0.1.0-beta'
+
+group 'com.youngfeng.ideaplugin'
+version "$pluginVersion"
 
 repositories {
     mavenCentral()
@@ -19,6 +21,7 @@ dependencies {
 intellij {
     plugins 'java', 'Kotlin'
     version '2019.3'
+    pluginName 'GenerateSerialVersionUID'
 }
 
 jar {
@@ -39,6 +42,9 @@ compileTestKotlin {
 
 patchPluginXml {
     changeNotes """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
+        This is the first version of the plugin. If you encounter any problems during use, <br/> 
+        please send me an email as soon as possible, appreciate it.
+      """
+    sinceBuild '93.13'
+    version "$pluginVersion"
 }

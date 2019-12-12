@@ -1,6 +1,6 @@
 <!DOCTYPE idea-plugin PUBLIC "Plugin/DTD" "http://plugins.intellij.net/plugin.dtd">
 <!--
-   Copyright 2006-2014 Olivier Descout
+   Copyright 2019 Ouyangfeng
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<idea-plugin url="http://plugins.intellij.net/plugin/?idea&amp;id=185" version="2">
+<idea-plugin>
     <name>GenerateSerialVersionUID</name>
+    <id>com.youngfeng.ideaplugin.generateserialversionuid</id>
     <description>
         <![CDATA[
         <p>
@@ -25,31 +26,27 @@
 		   The action is only visible when the class is serializable and either no serialVersionUID
 		   field exists or its value is different from the one the 'serialver' tool would return.
 	    </p>
+
+        <p>
+            The plugin supports both Java and Kotlin classes. If you need to support more programming languages,
+            please email me.
+        </p>
+        <p><h1>About author</h1></p>
+        <p><b>Name:</b> Feng Ouyangfeng</p>
+        <p><b>Email:</b> ouyangfeng2016@gmail.com</p>
+        <p><b>Blog:</b> <a href="http://youngfeng.com">http://youngfeng.com</a></p>
+        <p><b>Github:</b> <a href="https://github.com/yuanhoujun">https://github.com/yuanhoujun</a></p>
+        <p><b>Wechat official account:</b> 欧阳锋工作室</p>
       ]]>
     </description>
-    <version>3.0.2-patch1</version>
-    <vendor email="descout underscore olivier at yahoo dot fr">Olivier Descout</vendor>
-    <idea-version since-build="93.13"/>
+    <vendor email="ouyangfeng2016@gmail.com" url="http://youngfeng.com">Ouyangfeng</vendor>
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.platform</depends>
-    <depends optional="true" config-file="">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="plugin.xml">org.jetbrains.kotlin</depends>
 
-    <change-notes>
-        <![CDATA[
-        <p>3.0.2-patch1 - Fixed support for Groovy classes (IncorrectOperationException).<br>
-        <p>3.0.2 - Added support for Groovy classes.<br>
-                   Fixed the erratic field/method sorting while computing the UID.<br>
-        <p>3.0.1 - Added ability to generate serialVersionUID field for serializable inner classes.<br>
-                   Fixed the wrong incorrect-serialVersionUID-value-detected when serialVersionUID is set
-                   to a negative value.<br>
-                   Fixes the "java.lang.NoSuchFieldError: LONG" exception due to the move of some inner
-                   IDEA constants from one class to another between IDEA 9 and 10.<br>
-        <p>3.0.0 - Reused plugin written by Brad Lane a few years ago and updated it for IDEA 8+.<br>
-      ]]>
-    </change-notes>
     <actions>
-        <action id="GenerateSerialVersionUID"
+        <action id="GenerateSerialVersionUID.SerialVersionUID"
                 class="intellijplugin.action.GenerateSerialVersionUIDAction"
                 text="SerialVersionUID"
                 description="Generates a serialVersionUID field">
@@ -57,4 +54,8 @@
             <keyboard-shortcut first-keystroke="control alt G" keymap="$default"/>
         </action>
     </actions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+    </extensions>
 </idea-plugin>
