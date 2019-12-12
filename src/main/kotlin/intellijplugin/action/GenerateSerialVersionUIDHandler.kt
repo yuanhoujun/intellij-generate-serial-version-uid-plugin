@@ -22,6 +22,8 @@ import com.intellij.psi.PsiPrefixExpression
 import com.intellij.psi.PsiTypeParameter
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.util.IncorrectOperationException
+import intellijplugin.VERSION_UID_PROPERTY_NAME
+import intellijplugin.model.SerialVersionUIDState
 import intellijplugin.util.ClassUtils
 import intellijplugin.util.SerialVersionUIDBuilder
 import intellijplugin.util.SerializationUtils
@@ -90,8 +92,7 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
                 )
             }
         } else if (psiFile is KtFile) {
-            val location =
-                Location.fromEditor(editor, project)
+            val location = Location.fromEditor(editor, project)
             val psiElement = psiFile.findElementAt(location.startOffset)
             var ktClass: KtClass? = null
             if (null != psiElement) {
@@ -102,9 +103,11 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
                 displayMessage("Not a Kotlin class file.")
                 return
             }
-            if (needsUIDField(ktClass) && !hasUIDField(ktClass)) {
-                val serialVersionUID = computeDefaultSUID(ktClass)
-                insertSerialVersionUID(editor, ktClass, serialVersionUID)
+
+            val versionUID = computeDefaultSUID(ktClass)
+
+            if (needGenerateVersionUID(ktClass, versionUID)) {
+                createOrReplaceVersionUID(ktClass, versionUID)
             }
         }
     }
@@ -167,6 +170,61 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
                     LOGGER.info("Could not insert field", e)
                 }
             }
+        }
+
+        private fun createOrReplaceVersionUID(ktClass: KtClass, versionUID: Long) {
+            val ktFactory = KtPsiFactory(ktClass.project)
+
+            val classBody = ktClass.body ?: return
+
+            val state = getUIDFieldState(ktClass, versionUID)
+            when(state) {
+                SerialVersionUIDState.NoCompanionObject -> {
+                    val block = StringBuilder("\tcompanion object {\n")
+                    block.append("\t\tconst val serialVersionUID = ")
+                        .append(versionUID)
+                        .append("L\n")
+                        .append("\t}\n")
+                    val companionObject = ktFactory.createCompanionObject()
+
+                    val propertyBlock = "\n\t\tconst val serialVersionUID = ${versionUID}L\n"
+
+                    companionObject.body!!.addAfter(ktFactory.createBlockCodeFragment(propertyBlock, companionObject),
+                        companionObject.body!!.firstChild
+                    )
+                    classBody.addAfter(companionObject, classBody.firstChild)
+                }
+                SerialVersionUIDState.HasCompanionObjectButNoUID -> {
+                    val companionObject = ktClass.companionObjects.first()
+                    val property = ktFactory.createProperty(
+                        "const",
+                        "serialVersionUID",
+                        "Long",
+                        false,
+                        versionUID.toString() + "L"
+                    )
+                    companionObject.body!!.addAfter(property, companionObject.body!!.firstChild)
+                }
+                SerialVersionUIDState.HasInconsistentUID -> {
+                    val companionObject = ktClass.companionObjects.first()
+                    val oldProperty = getVersionUIDProperty(companionObject.body?.properties)!!
+
+                    val newProperty = ktFactory.createProperty(
+                        "const",
+                        "serialVersionUID",
+                        "Long",
+                        false,
+                        versionUID.toString() + "L"
+                    )
+
+                    oldProperty.replace(newProperty)
+//                    companionObject.body!!.addAfter(property, companionObject.body!!.firstChild)
+                }
+            }
+        }
+
+        private fun getVersionUIDProperty(properties: List<KtProperty>?): KtProperty? {
+            return properties?.find { it.name == VERSION_UID_PROPERTY_NAME }
         }
 
         private fun insertSerialVersionUID(
@@ -298,9 +356,7 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
         @JvmOverloads
         fun hasUIDField(
             psiClass: PsiClass?,
-            serialVersionUIDValue: Long = SerialVersionUIDBuilder.Companion.computeDefaultSUID(
-                psiClass
-            )
+            serialVersionUIDValue: Long = SerialVersionUIDBuilder.computeDefaultSUID(psiClass)
         ): Boolean {
             val field = getUIDField(psiClass)
             if (field != null) {
@@ -320,34 +376,46 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
             return false
         }
 
-        @JvmOverloads
-        fun hasUIDField(
-            psiClass: KtClass?,
-            serialVersionUIDValue: Long = computeDefaultSUID(psiClass)
-        ): Boolean {
-            if (null == psiClass) return false
-            val companionObjects = psiClass.companionObjects
-            val result = AtomicBoolean(false)
-            companionObjects.forEach(Consumer { value: KtObjectDeclaration ->
-                val body = value.body
-                if (null != body) {
-                    val properties = body.properties
-                    properties.forEach(Consumer { prop: KtProperty ->
-                        if ("serialVersionUID" == prop.name) {
-                            val initializer = prop.initializer
-                            if (null != initializer) {
-                                val initialValue = initializer.text
-                                if (null != initialValue && initialValue.length > 0) {
-                                    if (initialValue.toLong() == serialVersionUIDValue) {
-                                        result.set(true)
-                                    }
+        fun getUIDFieldState(ktClass: KtClass, expectedVersionUID: Long): SerialVersionUIDState {
+            val companionObject = ktClass.companionObjects?.firstOrNull()
+
+            var state = SerialVersionUIDState.NoCompanionObject
+
+            if (null != companionObject) {
+                state = SerialVersionUIDState.HasCompanionObjectButNoUID
+
+                val companionObjectBody = companionObject.body
+                if (null != companionObjectBody) {
+                    val properties = companionObjectBody.properties
+
+                    if (properties.isNotEmpty()) {
+                        for (prop in properties) {
+                            if (prop.name == VERSION_UID_PROPERTY_NAME) {
+                                val initializer = prop.initializer
+
+                                var initialValue = initializer!!.text
+                                if (initialValue.contains("L")) {
+                                    initialValue = initialValue.substring(0, initialValue.length - 1)
                                 }
+
+                                state = if (initialValue.toLongOrNull() == expectedVersionUID) {
+                                    SerialVersionUIDState.HasConsistentUID
+                                } else {
+                                    SerialVersionUIDState.HasInconsistentUID
+                                }
+
+                                break
                             }
                         }
-                    })
+                    }
                 }
-            })
-            return result.get()
+            }
+
+            return state
+        }
+
+        fun needGenerateVersionUID(ktClass: KtClass, expectedVersionUID: Long): Boolean {
+            return needsUIDField(ktClass) && getUIDFieldState(ktClass, expectedVersionUID) != SerialVersionUIDState.HasConsistentUID
         }
     }
 }

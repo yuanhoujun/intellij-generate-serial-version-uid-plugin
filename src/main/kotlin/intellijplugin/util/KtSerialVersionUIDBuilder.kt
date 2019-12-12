@@ -44,11 +44,6 @@ fun computeDefaultSUID(ktClass: KtClass?): Long {
             addMemberInfoToOutputStream(it, dos)
         }
 
-        val companionObject = getComanionObjects(ktClass)
-        companionObject?.apply {
-            dos.writeUTF("companion object")
-        }
-
         val constructors = getNonPrivateConstructors(ktClass)
         constructors.sortedBy { it.getName() }.forEach {
             addMemberInfoToOutputStream(it, dos)
@@ -92,12 +87,13 @@ private fun addClassInfoToOutputStream(ktClass: KtClass, dos: DataOutputStream) 
 
     dos.writeInt(modifiers)
 
-    val interfaces = ktClass.superTypeListEntries.sortedBy { it.text }
+    val interfaces = ktClass.superTypeListEntries.sortedBy { it.name }
     interfaces.forEach {
-        val name = it.text
+        val name = it.name
         Log.debug(msg = "${ktClass.name} -> interface: $name")
-        dos.writeUTF(name)
+        dos.writeUTF(name ?: it.text)
     }
+
 }
 
 private fun addMemberInfoToOutputStream(declaration: KtDeclaration, dos: DataOutputStream) {

@@ -1,6 +1,6 @@
 package intellijplugin.util
 
-import intellijplugin.isDebugEnabled
+import intellijplugin.DEBUG
 
 /**
  * This is a short description.
@@ -9,7 +9,7 @@ import intellijplugin.isDebugEnabled
  */
 object Log {
     fun debug(tag: String = "GenerateSerialVersionUID", msg: String) {
-        if (isDebugEnabled) {
+        if (DEBUG) {
             println("$tag: $msg")
         }
     }

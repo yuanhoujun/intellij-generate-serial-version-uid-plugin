@@ -10,6 +10,8 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiManager
 import intellijplugin.action.GenerateSerialVersionUIDHandler.Companion.hasUIDField
+import intellijplugin.action.GenerateSerialVersionUIDHandler.Companion.needGenerateVersionUID
+import intellijplugin.util.computeDefaultSUID
 import org.jetbrains.kotlin.idea.internal.Location
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFile
@@ -33,8 +35,9 @@ class GenerateSerialVersionUIDAction : EditorAction(GenerateSerialVersionUIDHand
                     val ktClass: KtClass? = GenerateSerialVersionUIDHandler.getKtClassWith(psiElement)
 
                     if (null != ktClass) {
-                        visible = GenerateSerialVersionUIDHandler.Companion.needsUIDField(ktClass)
-                        enabled = visible && !hasUIDField(ktClass)
+                        val needGenerateVersionUID = needGenerateVersionUID(ktClass, computeDefaultSUID(ktClass))
+                        visible = needGenerateVersionUID
+                        enabled = needGenerateVersionUID
                     }
                 }
             } else if (psiFile is PsiJavaFile) {

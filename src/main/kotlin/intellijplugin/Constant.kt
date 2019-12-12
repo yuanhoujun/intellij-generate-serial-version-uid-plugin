@@ -5,4 +5,6 @@ package intellijplugin
  *
  * @author Scott Smith 2019-12-11 22:23
  */
-val isDebugEnabled = true
+val DEBUG = true
+
+val VERSION_UID_PROPERTY_NAME = "serialVersionUID"
