@@ -43,8 +43,10 @@ compileTestKotlin {
 
 patchPluginXml {
     changeNotes """
-        This is the first version of the plugin. If you encounter any problems during use, <br/> 
-        please send me an email as soon as possible, appreciate it.
+        <ul>
+            <li>Fix calculation rules, use full path class names to participate in calculations.</li>
+            <li>Adding imports to calculation rules.</li>
+        </ul>
       """
     sinceBuild '93.13'
     version "$pluginVersion"
