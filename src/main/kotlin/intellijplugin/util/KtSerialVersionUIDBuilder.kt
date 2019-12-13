@@ -2,6 +2,7 @@ package intellijplugin.util
 
 import com.intellij.psi.impl.cache.ModifierFlags
 import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
+import org.jetbrains.kotlin.idea.refactoring.fqName.getKotlinFqName
 import org.jetbrains.kotlin.js.translate.utils.generateSignature
 import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -32,6 +33,7 @@ fun computeDefaultSUID(ktClass: KtClass?): Long {
         val baos = ByteArrayOutputStream()
         val dos = DataOutputStream(baos)
 
+        addImportsInfoToOutputStream(ktClass, dos)
         addClassInfoToOutputStream(ktClass, dos)
 
         val noPrivateProperties = getNonPrivateProperties(ktClass)
@@ -71,8 +73,18 @@ fun computeDefaultSUID(ktClass: KtClass?): Long {
     }
 }
 
+private fun addImportsInfoToOutputStream(ktClass: KtClass, dos: DataOutputStream) {
+    ktClass.containingKtFile.importDirectives.filter { it.isValidImport }.sortedBy { it.text }.forEach {
+        Log.debug(msg = "import: ${it.text}")
+        dos.writeUTF(it.text)
+    }
+}
+
 private fun addClassInfoToOutputStream(ktClass: KtClass, dos: DataOutputStream) {
-    dos.writeUTF(ktClass.javaClass.canonicalName)
+    val className = ktClass.getKotlinFqName()?.asString() ?: (ktClass.name ?: ktClass.text)
+    dos.writeUTF(className)
+
+    Log.debug(msg = "KtClass name: ${ktClass.getKotlinFqName()?.asString()}, text: ${ktClass.text}")
 
     var modifiers = calculateModifier(ktClass.modifierList)
     Log.debug(msg = "${ktClass.name} -> modifiers: $modifiers")
@@ -87,13 +99,14 @@ private fun addClassInfoToOutputStream(ktClass: KtClass, dos: DataOutputStream) 
 
     dos.writeInt(modifiers)
 
-    val interfaces = ktClass.superTypeListEntries.sortedBy { it.name }
-    interfaces.forEach {
-        val name = it.name
-        Log.debug(msg = "${ktClass.name} -> interface: $name")
-        dos.writeUTF(name ?: it.text)
-    }
 
+    val interfaces = ktClass.superTypeListEntries.sortedBy { it.text }
+
+    interfaces.forEach {
+        val name = it.text
+        Log.debug(msg = "${className} -> interface: $name")
+        dos.writeUTF(name)
+    }
 }
 
 private fun addMemberInfoToOutputStream(declaration: KtDeclaration, dos: DataOutputStream) {
