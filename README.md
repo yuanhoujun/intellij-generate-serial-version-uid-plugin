@@ -20,7 +20,7 @@ or
 [idea-GenerateSerialVersionUID](https://github.com/jbellassai/idea-GenerateSerialVersionUID)
 
 # Donation
-**If you find this plugin useful to you, please feel free to appreciate it, appreciate it.**
+**If you think this plugin is useful to you,, buy me a coffee please.**
 
 ![](https://github.com/yuanhoujun/intellij-generate-serial-version-uid-plugin/blob/master/images/alipay.png?raw=true)
 ![](https://github.com/yuanhoujun/intellij-generate-serial-version-uid-plugin/blob/master/images/wechatpay.png?raw=true)
