@@ -351,66 +351,73 @@ class SerialVersionUIDBuilder private constructor(psiClass: PsiClass) : JavaRecu
             if (!isSerializable) {
                 return 0L
             }
-            val serialVersionUIDBuilder =
-                SerialVersionUIDBuilder(psiClass)
+            val serialVersionUIDBuilder = SerialVersionUIDBuilder(psiClass)
+
             return try {
                 val byteArrayOutputStream = ByteArrayOutputStream()
                 val dataOutputStream = DataOutputStream(byteArrayOutputStream)
                 val className = psiClass.qualifiedName
                 dataOutputStream.writeUTF(className)
+
                 val classModifierList = psiClass.modifierList
-                var classModifiers: Int =
-                    MemberSignature.Companion.calculateModifierBitmap(classModifierList)
-                val methodSignatures =
-                    serialVersionUIDBuilder.nonPrivateMethodSignatures
+                var classModifiers: Int = MemberSignature.Companion.calculateModifierBitmap(classModifierList)
+
+                val methodSignatures = serialVersionUIDBuilder.nonPrivateMethodSignatures
+
                 if (psiClass.isInterface) {
                     classModifiers = classModifiers or 0x200
-                    if (methodSignatures.size == 0) {
+                    if (methodSignatures.isEmpty()) {
                         classModifiers = classModifiers and -0x401
                     }
                 }
+
                 dataOutputStream.writeInt(classModifiers)
+
                 val interfaces = psiClass.interfaces
-                Arrays.sort(
-                    interfaces,
-                    INTERFACE_COMPARATOR
-                )
+                Arrays.sort(interfaces, INTERFACE_COMPARATOR)
+
                 for (aInterfaces in interfaces) {
                     val name = aInterfaces.qualifiedName
                     dataOutputStream.writeUTF(name)
                 }
-                val nonPrivateFields =
-                    serialVersionUIDBuilder.getNonPrivateFields()
-                val staticInitializers =
-                    serialVersionUIDBuilder.getStaticInitializers()
-                val nonPrivateConstructors =
-                    serialVersionUIDBuilder.getNonPrivateConstructors()
+
+                val nonPrivateFields = serialVersionUIDBuilder.getNonPrivateFields()
+                val staticInitializers = serialVersionUIDBuilder.getStaticInitializers()
+                val nonPrivateConstructors = serialVersionUIDBuilder.getNonPrivateConstructors()
                 Arrays.sort(nonPrivateFields)
                 Arrays.sort(nonPrivateConstructors)
                 Arrays.sort(methodSignatures)
-                writeMemberSignatures(
-                    dataOutputStream,
-                    nonPrivateFields
-                )
-                writeMemberSignatures(
-                    dataOutputStream,
-                    staticInitializers
-                )
-                writeMemberSignatures(
-                    dataOutputStream,
-                    nonPrivateConstructors
-                )
-                writeMemberSignatures(
-                    dataOutputStream,
-                    methodSignatures
-                )
+
+                writeMemberSignatures(dataOutputStream, nonPrivateFields)
+                writeMemberSignatures(dataOutputStream, staticInitializers)
+                writeMemberSignatures(dataOutputStream, nonPrivateConstructors)
+                writeMemberSignatures(dataOutputStream, methodSignatures)
                 dataOutputStream.flush()
+
                 val digest = MessageDigest.getInstance("SHA")
                 val digestBytes = digest.digest(byteArrayOutputStream.toByteArray())
+
                 var serialVersionUID = 0L
                 for (i in Math.min(digestBytes.size, 8) - 1 downTo 0) {
                     serialVersionUID = serialVersionUID shl 8 or (digestBytes[i] and 0xff.toByte()).toLong()
                 }
+
+                val numberStr = if (serialVersionUID >= 0) "$serialVersionUID" else
+                    "$serialVersionUID".substring(1, "$serialVersionUID".length)
+
+                val symbolStr = if (serialVersionUID < 0) "-" else ""
+
+                if (numberStr.length < 9) {
+                    val prefixBuilder = StringBuilder("9")
+                    val zeroNumber = 8 - numberStr.length
+
+                    repeat(zeroNumber - 1) {
+                        prefixBuilder.append("0")
+                    }
+
+                    serialVersionUID = "$symbolStr$prefixBuilder$numberStr".toLong()
+                }
+
                 serialVersionUID
             } catch (exception: IOException) {
                 val internalError = InternalError(exception.message)
@@ -490,9 +497,9 @@ class SerialVersionUIDBuilder private constructor(psiClass: PsiClass) : JavaRecu
         }
         nonPrivateConstructors = HashSet()
         val constructors = psiClass.constructors
-        if (constructors.size == 0 && !psiClass.isInterface) {
-            val constructorSignature: MemberSignature
-            constructorSignature = if (psiClass.hasModifierProperty(PsiModifier.PUBLIC)) {
+
+        if (constructors.isEmpty() && !psiClass.isInterface) {
+            val constructorSignature = if (psiClass.hasModifierProperty(PsiModifier.PUBLIC)) {
                 MemberSignature.publicConstructor
             } else {
                 MemberSignature.packagePrivateConstructor

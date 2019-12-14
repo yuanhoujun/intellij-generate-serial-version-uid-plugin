@@ -36,6 +36,8 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.psi.psiUtil.isObjectLiteral
+import org.jetbrains.kotlin.psi.psiUtil.isPrivateNestedClassOrObject
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 import javax.swing.SwingUtilities
@@ -180,14 +182,9 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
             val state = getUIDFieldState(ktClass, versionUID)
             when(state) {
                 SerialVersionUIDState.NoCompanionObject -> {
-                    val block = StringBuilder("\tcompanion object {\n")
-                    block.append("\t\tconst val serialVersionUID = ")
-                        .append(versionUID)
-                        .append("L\n")
-                        .append("\t}\n")
                     val companionObject = ktFactory.createCompanionObject()
 
-                    val propertyBlock = "\n\t\tconst val serialVersionUID = ${versionUID}L\n"
+                    val propertyBlock = "\n\t\tprivate const val serialVersionUID = ${versionUID}L\n"
 
                     companionObject.body!!.addAfter(ktFactory.createBlockCodeFragment(propertyBlock, companionObject),
                         companionObject.body!!.firstChild
@@ -197,7 +194,7 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
                 SerialVersionUIDState.HasCompanionObjectButNoUID -> {
                     val companionObject = ktClass.companionObjects.first()
                     val property = ktFactory.createProperty(
-                        "const",
+                        "private const",
                         "serialVersionUID",
                         "Long",
                         false,
@@ -210,7 +207,7 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
                     val oldProperty = getVersionUIDProperty(companionObject.body?.properties)!!
 
                     val newProperty = ktFactory.createProperty(
-                        "const",
+                        "private const",
                         "serialVersionUID",
                         "Long",
                         false,
@@ -218,7 +215,6 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
                     )
 
                     oldProperty.replace(newProperty)
-//                    companionObject.body!!.addAfter(property, companionObject.body!!.firstChild)
                 }
             }
         }
@@ -327,18 +323,16 @@ class GenerateSerialVersionUIDHandler private constructor() : EditorWriteActionH
             if (aClass == null) {
                 return false
             }
-            if (aClass.isInterface() || aClass.isAnnotation() || aClass.isEnum()) {
+
+            if (aClass.isInterface() || aClass.isAnnotation() || aClass.isEnum() || aClass.isObjectLiteral()
+                || aClass.isPrivateNestedClassOrObject) {
                 return false
             }
-            //if (aClass instanceof PsiTypeParameter || aClass instanceof PsiAnonymousClass) {
-            //	return false;
-            //}
-            if (m_ignoreSerializableDueToInheritance) { //if (!SerializationUtils.isDirectlySerializable(aClass)) {
-                //	return false;
-                //}
-            } else if (!SerializationUtils.isSerializable(aClass)) {
+
+            if (!SerializationUtils.isSerializable(aClass)) {
                 return false
             }
+
             return true
         }
 
