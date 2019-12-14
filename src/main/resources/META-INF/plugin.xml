@@ -19,24 +19,30 @@
     <id>com.youngfeng.ideaplugin.generateserialversionuid</id>
     <description>
         <![CDATA[
-        <p>
-		   Adds a new action 'SerialVersionUID' in the generate menu (alt + ins). The action adds an
-		   serialVersionUID field in the current class or updates it if it already exists,
-		   and assigns it the same value the standard 'serialver' JDK tool would return.
-		   The action is only visible when the class is serializable and either no serialVersionUID
-		   field exists or its value is different from the one the 'serialver' tool would return.
-	    </p>
+         <p>Add a submenu "SerialVersionUID" to the generate menu (command + n). </p>
+         <br/>
+         <p>
+            It is used to generate the serialVersionUID property for the serialization class, and update it
+            if the property already exists.
+         </p>
+         <br/>
+         <p>
+             It is visible only when the current class implements the Serializable interface and the serialVersionUID property does
+             not exist, or the value of serialVersionUID does not match the calculated value.The current plugin only supports
+             Kotlin and Java languages. If you need to add other language support,please send me an email.
+         </p>
+        <br/>
+         <p>
+            In addition to using the menu, you can also use the shortcut key (ctrl + shift + g) to quickly generate or
+            update the serialVersionUID property
+         </p>
 
-        <p>
-            The plugin supports both Java and Kotlin classes. If you need to support more programming languages,
-            please email me.
-        </p>
-        <p><h1>About author</h1></p>
-        <p><b>Name:</b> Feng Ouyangfeng</p>
-        <p><b>Email:</b> ouyangfeng2016@gmail.com</p>
-        <p><b>Blog:</b> <a href="http://youngfeng.com">http://youngfeng.com</a></p>
-        <p><b>Github:</b> <a href="https://github.com/yuanhoujun">https://github.com/yuanhoujun</a></p>
-        <p><b>Wechat official account:</b> 欧阳锋工作室</p>
+         <p><h1>About author</h1></p>
+         <p><b>Name:</b> Feng Ouyangfeng</p>
+         <p><b>Email:</b> ouyangfeng2016@gmail.com</p>
+         <p><b>Blog:</b> <a href="http://youngfeng.com">http://youngfeng.com</a></p>
+         <p><b>Github:</b> <a href="https://github.com/yuanhoujun">https://github.com/yuanhoujun</a></p>
+         <p><b>Wechat official account:</b> 欧阳锋工作室</p>
       ]]>
     </description>
     <vendor email="ouyangfeng2016@gmail.com" url="http://youngfeng.com">Ouyangfeng</vendor>
