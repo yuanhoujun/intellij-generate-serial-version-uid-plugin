@@ -17,7 +17,7 @@ or
 * You can also use the shortcut Ctrl + Shift + G to quickly generate it.
 
 # Thanks
-![idea-GenerateSerialVersionUID](https://github.com/jbellassai/idea-GenerateSerialVersionUID)
+[idea-GenerateSerialVersionUID](https://github.com/jbellassai/idea-GenerateSerialVersionUID)
 
 # Donation
 **If you find this plugin useful to you, please feel free to appreciate it, appreciate it.**
