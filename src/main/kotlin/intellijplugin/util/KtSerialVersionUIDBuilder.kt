@@ -166,8 +166,12 @@ private fun addClassInfoToOutputStream(ktClass: KtClass, dos: DataOutputStream) 
 private fun addMemberInfoToOutputStream(declaration: KtDeclaration, dos: DataOutputStream) {
     var name = declaration.name ?: declaration.text
 
-    if (declaration is KtProperty) {
-        name = declaration.type()?.fqName.toString() ?: declaration.name
+    try {
+        if (declaration is KtProperty) {
+            name = declaration.type()?.fqName.toString() ?: declaration.name
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
     addMemberSignatureToOutputStream(
         name = name,
