@@ -170,7 +170,7 @@ private fun addMemberInfoToOutputStream(declaration: KtDeclaration, dos: DataOut
         if (declaration is KtProperty) {
             name = declaration.type()?.fqName.toString() ?: declaration.name
         }
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
         e.printStackTrace()
     }
     addMemberSignatureToOutputStream(
