@@ -14,7 +14,7 @@ or
 
 * Make sure your class has implemented `Serializable` interface.
 * Right-click in the class body and select Generate, SerialVersionUID to confirm.
-* You can also use the shortcut Ctrl + Shift + G to quickly generate it.
+* You can also use the shortcut Ctrl + Alt + G to quickly generate it.
 
 # Thanks
 [idea-GenerateSerialVersionUID](https://github.com/jbellassai/idea-GenerateSerialVersionUID)
