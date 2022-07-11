@@ -44,7 +44,7 @@ compileTestKotlin {
 patchPluginXml {
     changeNotes """
         <ul>
-            <li>Fix NoSuchMethodError in Android Studio 3.5.2</li>
+            <li>Modify the maximum supported version number, compatible with the latest version of the idea platform</li>
         </ul>
       """
     sinceBuild '93.13'
