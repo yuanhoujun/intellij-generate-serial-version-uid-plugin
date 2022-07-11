@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.60'
 }
 
-def pluginVersion = '0.2.1'
+def pluginVersion = '0.2.2'
 
 group 'com.youngfeng.ideaplugin'
 version "$pluginVersion"
@@ -48,5 +48,6 @@ patchPluginXml {
         </ul>
       """
     sinceBuild '93.13'
+    untilBuild '222'
     version "$pluginVersion"
 }
